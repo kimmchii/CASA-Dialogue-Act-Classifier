@@ -11,6 +11,7 @@ class UtteranceRNN(nn.Module):
         
         # embedding layer is replaced by pretrained roberta's embedding
         self.base = AutoModel.from_pretrained(pretrained_model_name_or_path=model_name)
+        self.tokenizer = AutoTokenizer.from_pretrained(model_name, device="cuda")
         # freeze the model parameters
         for param in self.base.parameters():
             param.requires_grad = False
@@ -28,9 +29,8 @@ class UtteranceRNN(nn.Module):
         """
             x.shape = [batch_size, seq_len]
         """
-        
-    
-        hidden_states, _ = self.base(input_ids, attention_mask) # hidden_states.shape = [batch, max_len, hidden_size]
+
+        logits = self.base(input_ids=input_ids, attention_mask=attention_mask) # hidden_states.shape = [batch, max_len, hidden_size]
         
         # padding and packing 
         #packed_hidden_states = nn.utils.rnn.pack_padded_sequence(hidden_states, seq_len, batch_first=True, enforce_sorted=False)   
@@ -41,7 +41,7 @@ class UtteranceRNN(nn.Module):
         #hidden is now from the final non-padded element in the batch
         
         #outputs, _ = nn.utils.rnn.pad_packed_sequence(packed_outputs, batch_first=True)
-        
+        hidden_states = logits.last_hidden_state
         outputs,_ = self.rnn(hidden_states)
-                
+
         return outputs

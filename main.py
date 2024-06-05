@@ -17,19 +17,19 @@ if __name__=="__main__":
         os.mkdir(path)
 
         
-    logger = WandbLogger(
-        name="grammarly-context-aware-attention",
-        save_dir=config["save_dir"],
-        project=config["project"],
-        log_model=True,
-    )
+    # logger = WandbLogger(
+    #     name="grammarly-context-aware-attention",
+    #     save_dir=config["save_dir"],
+    #     project=config["project"],
+    #     log_model=True,
+    # )
     early_stopping = EarlyStopping(
         monitor=config["monitor"],
         min_delta=config["min_delta"],
         patience=5,
     )
     checkpoints = ModelCheckpoint(
-        filepath=config["filepath"],
+        dirpath=config["filepath"],
         monitor=config["monitor"],
         save_top_k=1
     )
@@ -41,25 +41,29 @@ if __name__=="__main__":
     if config['restart'] and config['restart_checkpoint']:
         trainer = pl.Trainer(
             resume_from_checkpoint=config['restart_checkpoint'],
-            logger=logger,
-            gpus=[0],
-            checkpoint_callback=checkpoints,
-            callbacks=[early_stopping],
+            # logger=logger,
+            accelerator="auto",
+            callbacks=[
+                early_stopping,
+                checkpoints
+            ],
             default_root_dir="./models/",
             max_epochs=config["epochs"],
             precision=config["precision"],
-            automatic_optimization=True
+            # automatic_optimization=True
         )
     else:
         trainer = pl.Trainer(
-            logger=logger,
-            gpus=[0],
-            checkpoint_callback=checkpoints,
-            callbacks=[early_stopping],
+            # logger=logger,
+            accelerator="auto",
+            callbacks=[
+                early_stopping,
+                checkpoints
+            ],
             default_root_dir="./models/",
             max_epochs=config["epochs"],
             precision=config["precision"],
-            automatic_optimization=True
+            # automatic_optimization=True
         )
 
         
